@@ -7,9 +7,7 @@ use LEOCHARRE::DEBUG;
 #use LEOCHARRE::Database::Base ':all'; # for functional
 use base 'LEOCHARRE::Database::Base';
 
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.12 $ =~ /(\d+)/g;
-
-
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.13 $ =~ /(\d+)/g;
 
 
 =pod
