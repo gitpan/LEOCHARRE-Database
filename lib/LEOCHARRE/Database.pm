@@ -4,90 +4,10 @@ use strict;
 use warnings;
 use Carp;
 use LEOCHARRE::DEBUG;
-#use LEOCHARRE::Database::Base ':all'; # for functional
 use base 'LEOCHARRE::Database::Base';
 
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.13 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /(\d+)/g;
 
-
-=pod
-
-=head1 NAME
-
-LEOCHARRE::Database - common database methods for oo
-
-=head1 SYNOPSIS
-
-Mymod.pm:
-
-   package Mymod;
-   use base 'LEOCHARRE::Database';
-
-   1;
-
-
-script.pl:
-
-   use Mymod;
-
-   my $m = new Mymod({ 
-      DBHOST => 'localhost' , 
-      DBUSER => 'username',
-      DBPASSWORD => 'passwerd',
-      DBNAME => 'superdb',
-   });
-
-   $m->dbh;
-
-   my $a = $m->dbh_sth('select * from avocado where provider = ?');
-   $a->execute(3);
-
-   $m->dbh_sth('INSERT INTO fruit (name,provider) values(?,?)')->execute('grape','joe'); # gets prepared and cached
-   
-   $m->dbh_sth('INSERT INTO fruit (name,provider) values(?,?)')->execute('orange','joe'); # uses the previous cached prepared handle
-
-
-=head1 DESCRIPTION
-
-This is meant tobe used as base by another oo module.
-
-This can be passed an open database handle via DBH or it will attempt to open a new connection.
-By default it attempts to open a mysql connection.
-It can also open a sqlite connection.
-
-Basically, if you provide the argument DBABSPATH, will attempt to open a mysql connection instead.
-
-PLEASE NOTE autocommit is off. DESTROY calls commit and finishes and closes handles.
-
-=head2 To open a mysql connection
-
-   new ({ 
-      DBHOST => $host,
-      DBNAME => $dbname,
-      DBUSER => $dbuser,
-      DBPASSWORD => $pw,
-   });
-
-=head2 To open a sqlite connection
-
-   new ({ 
-      DBABSPATH => '/home/myself/great.db',
-   });
-
-=head2 To use existing connection
-
-   new ({ 
-      DBH => $dbh,
-   });
-
-
-=head1 METHODS
-
-These are meant to be inherited by your module with 
-
-   use base 'LEOCHARRE::Database';
-
-=cut
 
 
 sub dbh {
@@ -130,11 +50,6 @@ sub dbh {
    return $self->{DBH};
 }
 
-=head3 dbh()
-
-returns database handle
-
-=cut
 
 # did the connection happen here?
 sub _dbh_is_local {
@@ -149,18 +64,6 @@ sub dbh_selectcol {
    return $self->dbh->selectcol($statement); 
 }
 
-=head2 dbh_selectcol()
-
-argument is statement
-will select and return array ref
-
-   my $users = $self->dbh_selectcol("SELECT user FROM users WHERE type = 'm'");
-
-Now users has ['joe','rita','carl']
-
-This is useful sometimes.
-
-=cut
 
 sub dbh_do {
    my($self, $arg) = @_;
@@ -175,35 +78,10 @@ sub dbh_do {
 
    return 1;   
 }
-
-=head2 dbh_do()
-
-argis hash ref with mysql and sqlite keys
-
-will select one or the other with dbh_is_mysql etc
-
-   $self->dbh_do({
-      sqlite => 'CREATE TABLE bla( name varchar(25) )',
-      mysql  => 'CREATE TABLE bla( name varchar(25) )',  
-   });
-
-=cut
-
 sub dbh_count {
    my ($self,$statement) = @_;
    return $self->dbh->rows_count($statement);   
 }
-
-=head3 dbh_count()
-
-argument is statement
-returns count number
-you MUST have a COUNT(*) in the select statement
-
-   my $matches = $self->dbh_count('select count(*) from files');
-
-=cut
-
 
 sub dbh_sth {   
    my ($self, $statement) = @_;
@@ -222,25 +100,6 @@ sub dbh_sth {
    return $self->{_handles}->{$statement};  
 }
 
-
-=head2 dbh_sth()
-
-argument is a statment, returns handle
-it will cache in the object, subsequent calls are not re-prepared
-
-   my $delete = $self->dbh_sth('DELETE FROM files WHERE id = ?');
-   $delete->execute(4);
-   
-   # or..
-   for (@ids){
-      $self->dbh_sth('DELETE FROM files WHERE id = ?')->execute($_);
-   } 
-
-If the prepare fails, confess is called.
-
-=cut
-
-
 sub dbh_is_sqlite {
 	my $self = shift;
    return $self->dbh->is_sqlite;
@@ -256,21 +115,6 @@ sub dbh_driver {
    return $self->dbh->driver;
 }
 
-=head3 dbh_is_mysql()
-
-returns boolean
-
-=head3 dbh_is_sqlite()
-
-returns boolean
-
-=head3 dbh_driver()
-
-returns name of DBI Driver, sqlite, mysql, etc.
-Currently mysql is used, sqlite is used for testing. For testing the package, you don't need to have
-mysqld running.
-
-=cut
 
 
 sub dbh_droptable {
@@ -290,35 +134,10 @@ sub dbh_table_dump {
 
 
 
-
-=head2 dbh_table_exists()
-
-argument is table name, returns boolean
-
-=head2 dbh_table_dump()
-
-argument is table name
-returns string of dump of table suitable for print to STDERR
-
-=head2 dbh_droptable()
-
-arg is table name, drops the table.
-returns boolean
-will drop IF EXISTS
-
-=cut
-
 sub dbh_lid {
    my ($self,$tablename) = @_;
    return $self->dbh->lid($tablename);
 }
-
-=head2 dbh_lid()
-
-arg is table name, returns last insert id. 
-returns undef if not there
-
-=cut
 
 
 # for retro
@@ -365,6 +184,206 @@ sub DESTROY {
    return 1;
 }
 
+
+
+
+
+
+1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+LEOCHARRE::Database - common database methods for oo
+
+=head1 SYNOPSIS
+
+Mymod.pm:
+
+   package Mymod;
+   use base 'LEOCHARRE::Database';
+
+   1;
+
+script.pl:
+
+   use Mymod;
+
+   my $m = new Mymod({ 
+      DBHOST => 'localhost' , 
+      DBUSER => 'username',
+      DBPASSWORD => 'passwerd',
+      DBNAME => 'superdb',
+   });
+
+   $m->dbh;
+
+   my $a = $m->dbh_sth('select * from avocado where provider = ?');
+   $a->execute(3);
+
+   $m->dbh_sth('INSERT INTO fruit (name,provider) values(?,?)')->execute('grape','joe'); # gets prepared and cached
+   
+   $m->dbh_sth('INSERT INTO fruit (name,provider) values(?,?)')->execute('orange','joe'); # uses the previous cached prepared handle
+
+
+=head1 DESCRIPTION
+
+This is meant to be used as base by another oo module.
+
+This can be passed an open database handle via DBH or it will attempt to open a new connection.
+By default it attempts to open a mysql connection.
+It can also open a sqlite connection.
+
+Basically, if you provide the argument DBABSPATH, will attempt to open a mysql connection instead.
+
+PLEASE NOTE autocommit is off. DESTROY calls commit and finishes and closes handles.
+
+These and any other modules under my name as namespace base (LEOCHARRE) are parts of code that I use 
+for doing repetitive tasks. They are not bringing anything really new to the table, and I wouldn't assume
+that 'my way' is the way to attack these problems by any stretch of the imagination. 
+This is why I place them under my namespace, as a gesture of deference.
+
+
+=head2 To open a mysql connection
+
+   new ({ 
+      DBHOST => $host,
+      DBNAME => $dbname,
+      DBUSER => $dbuser,
+      DBPASSWORD => $pw,
+   });
+
+=head2 To open a sqlite connection
+
+   new ({ 
+      DBABSPATH => '/home/myself/great.db',
+   });
+
+=head2 To use existing connection
+
+   new ({ 
+      DBH => $dbh,
+   });
+
+
+=head1 METHODS
+
+These are meant to be inherited by your module with 
+
+   use base 'LEOCHARRE::Database';
+
+
+
+=head3 dbh()
+
+returns database handle
+
+
+
+
+=head2 dbh_selectcol()
+
+argument is statement
+will select and return array ref
+
+   my $users = $self->dbh_selectcol("SELECT user FROM users WHERE type = 'm'");
+
+Now users has ['joe','rita','carl']
+
+This is useful sometimes.
+
+
+
+=head2 dbh_do()
+
+argis hash ref with mysql and sqlite keys
+
+will select one or the other with dbh_is_mysql etc
+
+   $self->dbh_do({
+      sqlite => 'CREATE TABLE bla( name varchar(25) )',
+      mysql  => 'CREATE TABLE bla( name varchar(25) )',  
+   });
+
+
+
+
+=head3 dbh_count()
+
+argument is statement
+returns count number
+you MUST have a COUNT(*) in the select statement
+
+   my $matches = $self->dbh_count('select count(*) from files');
+
+
+
+
+
+=head2 dbh_sth()
+
+argument is a statment, returns handle
+it will cache in the object, subsequent calls are not re-prepared
+
+   my $delete = $self->dbh_sth('DELETE FROM files WHERE id = ?');
+   $delete->execute(4);
+   
+   # or..
+   for (@ids){
+      $self->dbh_sth('DELETE FROM files WHERE id = ?')->execute($_);
+   } 
+
+If the prepare fails, confess is called.
+
+
+
+=head3 dbh_is_mysql()
+
+returns boolean
+
+=head3 dbh_is_sqlite()
+
+returns boolean
+
+=head3 dbh_driver()
+
+returns name of DBI Driver, sqlite, mysql, etc.
+Currently mysql is used, sqlite is used for testing. For testing the package, you don't need to have
+mysqld running.
+
+
+
+=head2 dbh_table_exists()
+
+argument is table name, returns boolean
+
+=head2 dbh_table_dump()
+
+argument is table name
+returns string of dump of table suitable for print to STDERR
+
+=head2 dbh_droptable()
+
+arg is table name, drops the table.
+returns boolean
+will drop IF EXISTS
+
+
+
+=head2 dbh_lid()
+
+arg is table name, returns last insert id. 
+returns undef if not there
+
+
+
+
+
+
+
 =head2 dbh_close_active_handles()
 
 closes ChildHandles that are active, finishes and undefines them.
@@ -404,10 +423,11 @@ L<DBI>
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
+http://leocharre.com
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 Leo Charre. All rights reserved.
+Copyright (c) 2008 Leo Charre. All rights reserved.
 
 =head1 LICENSE
 
@@ -419,7 +439,6 @@ This package is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 See the "GNU General Public License" for more details.
 
+
 =cut
 
-
-1;

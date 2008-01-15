@@ -5,7 +5,7 @@ use lib './lib';
 use lib './t';
 use Test;
 use Cwd;
-#use Smart::Comments '###';
+
 $LEOCHARRE::Database::DEBUG = 1;
 
 
