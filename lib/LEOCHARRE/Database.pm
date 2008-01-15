@@ -5,8 +5,8 @@ use warnings;
 use Carp;
 use LEOCHARRE::DEBUG;
 use base 'LEOCHARRE::Database::Base';
-
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /(\d+)/g;
+use vars qw($VERSION);
+$VERSION = sprintf "%d.%02d", q$Revision: 1.15 $ =~ /(\d+)/g;
 
 
 
@@ -377,10 +377,6 @@ will drop IF EXISTS
 
 arg is table name, returns last insert id. 
 returns undef if not there
-
-
-
-
 
 
 

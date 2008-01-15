@@ -6,7 +6,6 @@ use lib './t';
 use Test;
 use Cwd;
 
-$LEOCHARRE::Database::DEBUG = 1;
 
 
 my $abs_db = cwd().'/t/test.db';
