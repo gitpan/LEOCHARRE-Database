@@ -6,8 +6,7 @@ use Carp;
 use LEOCHARRE::DEBUG;
 use base 'LEOCHARRE::Database::Base';
 use vars qw($VERSION);
-$VERSION = sprintf "%d.%02d", q$Revision: 1.15 $ =~ /(\d+)/g;
-
+$VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /(\d+)/g;
 
 
 sub dbh {

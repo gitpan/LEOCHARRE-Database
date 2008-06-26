@@ -26,7 +26,7 @@ connect_mysql
 
 %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.5 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 
 
@@ -98,14 +98,14 @@ sub _rows_count {
 
 sub is_sqlite {
 	my $dbh = shift;
-   my $d = driver($dbh);
+   my $d = driver($dbh) or return 0;
 	$d=~/sqlite/i or return 0;
 	return 1;
 }
 
 sub is_mysql {
 	my $dbh = shift;
-   my $d = $dbh->driver;   
+   my $d = driver($dbh) or return 0;   
 	$d=~/mysql/i or return 0;
 	return 1;
 }
@@ -113,7 +113,7 @@ sub is_mysql {
 sub driver {
    my $dbh = shift;
    defined $dbh or confess('missing dbh object as arg');
-   defined $dbh->{Driver} or warn("attribute 'Driver' not present in dbh obj passed") and return;
+   defined $dbh->{Driver} or debug("attribute 'Driver' not present in dbh obj passed") and return;
    my $n = $dbh->{Driver}->{Name} or return;
 	return $n;
 }
@@ -234,6 +234,42 @@ sub selectcol {
 
 
 
+
+
+
+
+sub connect_mysql {
+   my($dbname,$user,$pass,$host)= @_;
+   defined $dbname or confess('missing dbname');
+   defined $user or confess('missing user');
+   defined $pass or confess('missing pass');
+   $host||='localhost';
+   
+   debug("[host:$host,dbname:$dbname,user:$user,pass:$pass]\n");
+   require DBI;   
+   my $dbh = DBI->connect( "DBI:mysql:database=$dbname;host=$host",$user, $pass )
+		         or carp("  -ERROR=[$DBI::errstr]\n  -make sure mysqld is running\n  -wrong credentials?[$dbname,$user,$host]")
+               and return;
+   return $dbh;   
+}
+
+sub connect_sqlite {
+   my $abs_db = shift;
+   defined $abs_db or die;
+   debug("abs db [$abs_db]");
+
+   require DBI;   
+   my $dbh = DBI->connect( "dbi:SQLite:$abs_db", '', '', )
+	   or carp("$DBI::errstr, cant open sqlite connect. []")
+      and return;
+   return $dbh;  
+}
+
+
+1;
+
+__END__
+
 =pod
 
 =head1 NAME
@@ -349,49 +385,7 @@ arument is dbh and table name
 returns boolean
 
 
-   ____
-\-/    \
- *      \
-(|)      \
-\'/       \
-| |       /
-  \      /
-   |    /
-   |   /
-   \   |
-    
-   
 =head1 CONSTRUCTORS
-
-=cut
-
-sub connect_mysql {
-   my($dbname,$user,$pass,$host)= @_;
-   defined $dbname or confess('missing dbname');
-   defined $user or confess('missing user');
-   defined $pass or confess('missing pass');
-   $host||='localhost';
-   
-   debug("[host:$host,dbname:$dbname,user:$user,pass:$pass]\n");
-   require DBI;   
-   my $dbh = DBI->connect( "DBI:mysql:database=$dbname;host=$host",$user, $pass )
-		         or carp("  -ERROR=[$DBI::errstr]\n  -make sure mysqld is running\n  -wrong credentials?[$dbname,$user,$host]")
-               and return;
-   return $dbh;   
-}
-
-sub connect_sqlite {
-   my $abs_db = shift;
-   defined $abs_db or die;
-   debug("abs db [$abs_db]");
-
-   require DBI;   
-   my $dbh = DBI->connect( "dbi:SQLite:$abs_db", '', '', )
-	   or carp("$DBI::errstr, cant open sqlite connect. []")
-      and return;
-   return $dbh;  
-}
-
 
 =head2 connect_sqlite()
 
@@ -412,6 +406,10 @@ returns undef on failure
 
 =cut
 
+=head1 DEBUG
+
+   $LEOCHARRE::Database::Base::DEBUG = 1;
+
 
 =head1 AUTHOR
 
@@ -419,11 +417,6 @@ Leo Charre leocharre at cpan dot org
 
 =cut
 
-
-
-
-
-1;
 
 
 

@@ -22,7 +22,8 @@ adds LEOCHARRE::Database::Base to DBI
    use LEOCHARRE::DBI;
 
    my $dbh = DBI::connect_sqlite('/home/myself/stuff.db');
-
+	my $dbh = DBI::connect_mysql($dnbane, $user, $pass, $host);
+	
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
